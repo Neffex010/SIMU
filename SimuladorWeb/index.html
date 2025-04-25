@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bienvenido al Simulador</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- AOS CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet" />
+
+  <!-- Google Fonts: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+
+
+  <!-- Favicon -->
+  <link rel="icon" href="./image/favicon.png" type="image/x-icon">
+
+  <!-- CSS Personalizado -->
+  <link rel="stylesheet" href="./css/diseño.css">
+</head>
+
+<body>
+
+  <!-- Cabecera -->
+  <header>
+    <div class="container">
+      <img src="./image/Tecnologico_Nacional_de_Mexico.svg.png" alt="Logo Tecnológico Nacional de México"
+        class="logo rounded shadow" style="background: white; padding: 10px;" data-aos="fade-right" />
+
+      <!-- Tagline dinámico -->
+      <span class="tagline" data-aos="fade-down">Domina tu futuro en TICs</span>
+
+      <img src="./image/LITP.png" alt="Logo ITP Pachuca" class="logo rounded shadow"
+        style="background: white; padding: 10px;" data-aos="fade-left" />
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="container mt-5" data-aos="fade-up">
+    <div class="row">
+      <!-- Formulario -->
+      <div class="col-md-6">
+        <div class="card shadow-lg mb-4" data-aos="fade-up">
+          <div class="card-body">
+            <h2 class="text-center mb-4">Bienvenido al Simulador de Entrevistas</h2>
+            <p class="text-center">Por favor, completa tus datos para comenzar con la simulación.</p>
+            <form id="formDatos">
+              <div class="mb-3">
+                <label for="control" class="form-label">Número de Control</label>
+                <input type="text" class="form-control" id="control" required placeholder="Ej. 22200205" />
+              </div>
+              <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre(s)</label>
+                <input type="text" class="form-control" id="nombre" required />
+              </div>
+              <div class="mb-3">
+                <label for="apellidos" class="form-label">Apellidos</label>
+                <input type="text" class="form-control" id="apellidos" required />
+              </div>
+              <div class="mb-3">
+                <label for="correo" class="form-label">
+                  <i class="bi bi-envelope me-1"></i>Correo electrónico
+                </label>
+                <input type="email" class="form-control" id="correo" required />
+              </div>
+              <div class="mb-3">
+                <label for="telefono" class="form-label">Número de Teléfono</label>
+                <input type="tel" class="form-control" id="telefono" required />
+              </div>
+              <div class="text-center">
+                <button type="submit" class="btn btn-primary">Entrar al Simulador</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Imagen Mascota -->
+      <div class="col-md-6 d-flex align-items-center justify-content-center">
+        <img src="./image/mascota.png" alt="Mascota Institucional" class="mascota-img" data-aos="zoom-in" />
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Moderno -->
+  <footer class="footer-modern mt-auto">
+    <div class="container">
+      <div class="row mb-3 justify-content-between align-items-center">
+        <!-- Botones de funcionalidad -->
+        <div class="col-12 col-md-6 text-center text-md-start">
+          <div class="footer-icons">
+
+            <!-- Botón estilizado con ícono para abrir el modal del equipo -->
+            <button class="footer-btn" data-bs-toggle="modal" data-bs-target="#equipoModal" title="Equipo">
+              <i class="bi bi-people-fill"></i>
+
+            </button>
+
+            <!-- Botón para abrir el modal del equipo -->
+
+
+            <button class="footer-btn" data-bs-toggle="modal" data-bs-target="#ayudaModal" title="Ayuda">
+              <i class="bi bi-question-circle-fill"></i>
+            </button>
+            <button class="footer-btn" data-bs-toggle="modal" data-bs-target="#contactoModal" title="Contacto">
+              <i class="bi bi-envelope-fill"></i>
+            </button>
+            <button class="footer-btn" id="toggleDarkMode" title="Modo Oscuro">
+              <i class="bi bi-moon-stars-fill"></i>
+            </button>
+
+          </div>
+        </div>
+        <!-- Enlaces a portales y Facebook -->
+        <div class="col-12 col-md-6 text-center text-md-end">
+          <div class="footer-socials">
+            <a href="http://virtual.itpachuca.edu.mx/moodle/" target="_blank" class="footer-btn"
+              title="Moodle ITPachuca">
+              <i class="bi bi-mortarboard-fill"></i>
+            </a>
+            <a href="https://itp.itpachuca.edu.mx/" target="_blank" class="footer-btn" title="Portal ITPachuca">
+              <i class="bi bi-building-fill"></i>
+            </a>
+            <a href="http://189.203.154.61/" target="_blank" class="footer-btn" title="Sistema Interno ITPachuca">
+              <i class="bi bi-window-sidebar"></i>
+            </a>
+            <a href="https://www.facebook.com/ITPachucaOficial" target="_blank" class="footer-btn"
+              title="Facebook ITPachuca">
+              <i class="bi bi-facebook"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col text-center small mt-2 footer-copy">
+          © 2025 <i class="bi bi-mortarboard-fill"></i> Instituto Tecnológico de Pachuca | Simulador de Entrevistas
+          Laborales | Versión 1.0
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Modales -->
+  <div class="modal fade" id="ayudaModal" tabindex="-1" aria-labelledby="ayudaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ayudaModalLabel">Ayuda</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <h5>¿Cómo usar el Simulador de Entrevistas?</h5>
+          <p>Este simulador está diseñado para ayudarte a practicar y mejorar tus habilidades en entrevistas laborales
+            en el ámbito de las Tecnologías de la Información y Comunicaciones (TIC). Sigue estos pasos:</p>
+          <ul>
+            <li><strong>Paso 1:</strong> Completa el formulario con tu información personal. Asegúrate de ingresar un
+              número de control válido, tu nombre completo, correo electrónico y número de teléfono.</li>
+            <li><strong>Paso 2:</strong> Una vez que hayas completado el formulario, haz clic en "Entrar al Simulador".
+              Esto te llevará a una serie de preguntas comunes en entrevistas laborales para evaluar tu preparación.
+            </li>
+            <li><strong>Paso 3:</strong> Responde las preguntas de la entrevista de la mejor manera posible. El
+              simulador te dará retroalimentación instantánea para ayudarte a mejorar tus respuestas.</li>
+            <li><strong>Consejo:</strong> Si no estás seguro de alguna respuesta, no dudes en pedir ayuda o buscar más
+              información en línea para mejorar tus conocimientos.</li>
+          </ul>
+          <p>Si tienes alguna duda o problema, no dudes en ponerte en contacto con nosotros a través del modal de
+            "Contacto".</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="contactoModal" tabindex="-1" aria-labelledby="contactoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="contactoModalLabel">Contacto</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Tienes alguna duda o necesitas asistencia?</p>
+          <p>Para cualquier consulta relacionada con el simulador, no dudes en escribirnos:</p>
+          <p><strong>Correo Electrónico:</strong> <a href="mailto:info@simulador.com">info@simulador.com</a></p>
+          <p>Te responderemos lo antes posible para ayudarte a resolver cualquier inconveniente.</p>
+          <p>¡Gracias por usar nuestro Simulador de Entrevistas Laborales!</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Modal Equipo -->
+  <div class="modal fade" id="equipoModal" tabindex="-1" aria-labelledby="equipoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="equipoModalLabel">Conoce al Equipo de Desarrollo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <!-- Integrante 1 -->
+            <div class="col-12 col-md-6 mb-4">
+              <h5>Luis Cabrera</h5>
+              <p>Desarrollador Frontend</p>
+              <div class="text-center">
+                <a href="https://www.facebook.com/share/195w9N1yro/" target="_blank" class="btn-facebook"
+                  title="Facebook">
+                  <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/enrique_1895_cg?igsh=bGltbjFtdmU1cWp3" target="_blank"
+                  class="btn-instagram" title="Instagram">
+                  <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/luis-enrique-cabrera-garcia-a66113326/" target="_blank"
+                  class="btn-linkedin" title="LinkedIn">
+                  <i class="fab fa-linkedin-in"></i>
+                </a>
+              </div>
+
+            </div>
+
+            <!-- Integrante 2 -->
+            <div class="col-12 col-md-6 mb-4">
+              <h5>Denise Campos</h5>
+              <p>Diseñadora UX/UI</p>
+              <div class="text-center">
+                <a href="https://www.facebook.com/share/15Vi6jASix/" target="_blank" class="btn-facebook"
+                  title="Facebook">
+                  <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/diana_denise_18?igsh=MTF0NTl0MDlwcDFwOQ==" target="_blank"
+                  class="btn-instagram" title="Instagram">
+                  <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/denise-campos-17427534a/" target="_blank" class="btn-linkedin"
+                  title="LinkedIn">
+                  <i class="fab fa-linkedin-in"></i>
+                </a>
+              </div>
+
+            </div>
+
+            <!-- Integrante 3 -->
+            <div class="col-12 col-md-6 mb-4">
+              <h5>Rodrigo Noeggerath</h5>
+              <p>Backend Developer</p>
+              <div class="text-center">
+                <a href="https://www.facebook.com/share/1bBCggfwDo/" target="_blank" class="btn-facebook"
+                  title="Facebook">
+                  <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/rodrigonoeggerath?igsh=bnoyNnRvdG8yY3N2" target="_blank"
+                  class="btn-instagram" title="Instagram">
+                  <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/axel-noeggerath-medina-7758a8325/" target="_blank"
+                  class="btn-linkedin" title="LinkedIn">
+                  <i class="fab fa-linkedin-in"></i>
+                </a>
+              </div>
+
+            </div>
+
+            <!-- Integrante 4 -->
+            <div class="col-12 col-md-6 mb-4">
+              <h5>Nicole Lares</h5>
+              <p>Especialista en Testing</p>
+              <div class="text-center">
+                <a href="https://www.facebook.com/share/1C9NkRnZoa/" target="_blank" class="btn-facebook"
+                  title="Facebook">
+                  <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/elkrackken?igsh=MXF5ajdoYW54MHoyZg==" target="_blank"
+                  class="btn-instagram" title="Instagram">
+                  <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/in/nicole-dayana-esparza-lares-712b10325/" target="_blank"
+                  class="btn-linkedin" title="LinkedIn">
+                  <i class="fab fa-linkedin-in"></i>
+                </a>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- AOS JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 800,
+      offset: 150,
+      once: true
+    });
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- JS Personalizado -->
+  <script src="./js/formulario.js" defer></script>
+</body>
+
+</html>

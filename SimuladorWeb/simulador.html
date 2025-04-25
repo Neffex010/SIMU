@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de Entrevistas IT</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
+<body>
+  <!-- 🔵 CABECERA -->
+  <header class="header d-flex justify-content-between align-items-center px-4 py-3 mb-4 fade-in">
+    <img src="./image/Tecnologico_Nacional_de_Mexico.svg (2).png" alt="Logo TecNM" class="logo">
+    <h2 class="m-0 text-center flex-grow-1">Simulador de Entrevistas IT</h2>
+    <img src="./image/LITP.png" alt="Logo ITS" class="logo">
+  </header>
+
+  <div id="progressContainer" class="mb-4">
+    <div id="progressBar" style="width: 0%;"></div>
+  </div>
+
+  
+
+  <div class="container py-5">
+    <!-- 🔥 Bienvenida -->
+    <div id="bienvenidaCard" class="card mb-4 d-none">
+      <div class="card-body text-center">
+        <h4>👋 Bienvenido, <span id="nombreUsuario"></span> (<span id="controlUsuario"></span>)</h4>
+      </div>
+    </div>
+
+    <!-- Título -->
+    <div class="text-center mb-4">
+      <h1>🎙️ Simulador de Entrevistas IT</h1>
+      <p class="lead">Prepárate con preguntas reales y feedback automatizado</p>
+    </div>
+
+    <div class="text-center mb-3">
+      <span id="moduloActual" class="badge d-none">Módulo: Habilidades Técnicas</span>
+    </div>
+
+    <div id="progressContainer" class="mb-4">
+      <div id="progressBar" style="width: 10%;"></div>
+    </div>
+  
+
+    <!-- Tarjeta de pregunta -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title" id="pregunta">Presiona comenzar para iniciar la entrevista</h5>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <span>⏱️ <span id="timer">--</span></span>
+          <div>
+            <button class="btn btn-warning" id="btnVoz">🎤 Hablar</button>
+            <button class="btn btn-outline" id="btnMute">🔇 Silenciar Voz</button>
+          </div>
+        </div>
+        <textarea id="respuesta" class="form-control mt-3" rows="3"
+          placeholder="Escribe o di tu respuesta..."></textarea>
+        <div class="mt-3 text-end">
+          <button class="btn btn-success" id="btnSiguiente">Siguiente</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="feedback" class="alert mt-4 d-none"></div>
+
+    <div class="text-center mt-5" id="inicioEntrevista">
+      <button class="btn btn-primary" id="btnComenzar">Comenzar Entrevista</button>
+    </div>
+
+    <div class="text-center mt-3">
+      <button class="btn btn-info d-none" id="btnVistaPrevia" data-bs-toggle="modal"
+        data-bs-target="#modalVistaPrevia">👁️ Vista Previa Informe</button>
+      <button class="btn btn-outline d-none" id="btnDescargarPDF">📄 Descargar Informe PDF</button>
+      <button class="btn btn-warning d-none" id="btnReiniciar">🔄 Reiniciar Entrevista</button>
+    </div>
+  </div>
+
+  <!-- Modal de vista previa -->
+  <div class="modal fade" id="modalVistaPrevia" tabindex="-1" aria-labelledby="vistaPreviaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="vistaPreviaLabel">Vista Previa del Informe</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="vistaPreviaContenido">
+          <!-- Contenido del informe -->
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-success" id="descargarDesdeModal">📥 Descargar PDF</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚫ FOOTER -->
+  <footer class="footer py-4 mt-5">
+    <div class="container d-flex justify-content-center gap-4">
+      <div class="text-center">
+        <button class="icon-btn" data-bs-toggle="modal" data-bs-target="#modalAyuda">
+          <i class="bi bi-question-circle"></i>
+        </button>
+        <small class="d-block mt-1">Ayuda</small>
+      </div>
+      <div class="text-center">
+        <button class="icon-btn" data-bs-toggle="modal" data-bs-target="#modalContacto">
+          <i class="bi bi-envelope"></i>
+        </button>
+        <small class="d-block mt-1">Contacto</small>
+      </div>
+      <div class="text-center">
+        <a href="https://github.com/TuRepositorioSimulador" target="_blank" class="icon-btn">
+          <i class="bi bi-github"></i>
+        </a>
+        <small class="d-block mt-1">Código</small>
+      </div>
+      <div class="text-center">
+        <button class="icon-btn" id="toggleDarkMode" title="Modo Oscuro">
+          <i class="bi bi-moon-stars-fill"></i>
+        </button>
+        <small class="d-block mt-1">Modo</small>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal de Ayuda -->
+  <!-- Modal de Ayuda con íconos -->
+  <div class="modal fade" id="modalAyuda" tabindex="-1" aria-labelledby="modalAyudaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-light">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAyudaLabel">🆘 ¿Cómo usar el simulador?</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="list-unstyled">
+            <li class="mb-3 d-flex align-items-start">
+              <span class="me-3 fs-4">▶️</span>
+              <div>
+                <strong>Paso 1:</strong> Haz clic en <strong>“Comenzar Entrevista”</strong> para iniciar la simulación.
+              </div>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+              <span class="me-3 fs-4">🎤</span>
+              <div>
+                <strong>Paso 2:</strong> Responde con voz usando el botón <strong>“Hablar”</strong>, o escribe tu
+                respuesta.
+              </div>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+              <span class="me-3 fs-4">🧠</span>
+              <div>
+                <strong>Paso 3:</strong> Recibe retroalimentación automática con sugerencias de mejora.
+              </div>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+              <span class="me-3 fs-4">📄</span>
+              <div>
+                <strong>Paso 4:</strong> Al terminar, puedes ver y descargar tu informe en PDF.
+              </div>
+            </li>
+          </ul>
+          <hr class="bg-light" />
+          <p class="text-muted"><small>¿Problemas técnicos? Intenta recargar la página o contacta soporte.</small></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal de Contacto -->
+  <!-- Modal de Contacto -->
+  <div class="modal fade" id="modalContacto" tabindex="-1" aria-labelledby="modalContactoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-light">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalContactoLabel">📩 ¿Necesitas ayuda?</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-3">Nuestro equipo está listo para apoyarte:</p>
+          <ul class="list-unstyled">
+            <li class="mb-2"><span class="me-2">📧</span> <strong>Email:</strong> <a
+                href="mailto:soporte@simuladorit.mx" class="text-info">soporte@simuladorit.mx</a></li>
+            <li class="mb-2"><span class="me-2">📱</span> <strong>WhatsApp:</strong> <a
+                href="https://wa.me/5217711234567" target="_blank" class="text-info">+52 1 771 123 4567</a></li>
+            <li class="mb-2"><span class="me-2">🌐</span> <strong>Sitio:</strong> <a href="https://simuladorit.mx"
+                target="_blank" class="text-info">simuladorit.mx</a></li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" src="./js/index.js"></script>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const toggleBtn = document.getElementById("toggleDarkMode");
+      const body = document.body;
+      const icon = toggleBtn.querySelector("i");
+      const label = toggleBtn.nextElementSibling; // Captura el <small> que dice "Modo"
+
+      // Función para actualizar el ícono y texto
+      function updateUI(isLight) {
+        if (isLight) {
+          icon.classList.replace("bi-moon-stars-fill", "bi-brightness-high-fill");
+          label.textContent = "Claro";
+        } else {
+          icon.classList.replace("bi-brightness-high-fill", "bi-moon-stars-fill");
+          label.textContent = "Oscuro";
+        }
+      }
+
+      // Al cargar, aplicar preferencia guardada
+      const storedTheme = localStorage.getItem("theme");
+      if (storedTheme === "light") {
+        body.classList.add("light");
+        updateUI(true);
+      } else {
+        updateUI(false);
+      }
+
+      // Al hacer clic, alternar modo
+      toggleBtn.addEventListener("click", function () {
+        const isLight = body.classList.toggle("light");
+        updateUI(isLight);
+        localStorage.setItem("theme", isLight ? "light" : "dark");
+      });
+    });
+  </script>
+
+</body>
+
+</html>
