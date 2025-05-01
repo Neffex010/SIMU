@@ -1,39 +1,40 @@
 // ---------- src/timer.js ----------
 export class Timer {
-  constructor(displayElem, duration, onTimeout) {
-    this.displayElem = displayElem;
+  constructor(displayElement, duration, onTimeout) {
+    this.display = displayElement;
     this.duration = duration;
     this.onTimeout = onTimeout;
-    this._remaining = duration;
-    this._intervalId = null;
+    this.remainingTime = duration;
+    this.intervalId = null;
+    // Nueva propiedad para seguimiento
+    this.isTimeout = false;
   }
 
   start() {
-    this.reset();
-    this._intervalId = setInterval(() => {
-      this._remaining--;
-      this.updateDisplay();
-      if (this._remaining <= 0) {
+    this.isTimeout = false;
+    this.intervalId = setInterval(() => {
+      this.remainingTime--;
+      this.display.textContent = this.remainingTime;
+
+      if (this.remainingTime <= 0) {
+        this.isTimeout = true;
         this.stop();
         this.onTimeout();
       }
     }, 1000);
   }
 
-  reset() {
-    this.stop();
-    this._remaining = this.duration;
-    this.updateDisplay();
-  }
-
   stop() {
-    if (this._intervalId) {
-      clearInterval(this._intervalId);
-      this._intervalId = null;
+    clearInterval(this.intervalId);
+    if (this.isTimeout) {
+      this.display.textContent = "00";
     }
   }
 
-  updateDisplay() {
-    this.displayElem.textContent = `${this._remaining}s`;
+  reset() {
+    this.stop();
+    this.remainingTime = this.duration;
+    this.display.textContent = this.duration;
+    this.isTimeout = false;
   }
 }
