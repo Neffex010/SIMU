@@ -59,7 +59,6 @@ export const PDF_CONFIG = {
 
 export const APP_SETTINGS = {
   tiempoPregunta: 60,
-    
   openAIEndpoint: '/.netlify/functions/openaiFeedback',
-  openAISpeechEndpoint: '/.netlify/functions/openaiSpeech'
+  openAISpeechEndpoint: '/.netlify/functions/openaiSpeech' // Nueva función para TTS
 };
