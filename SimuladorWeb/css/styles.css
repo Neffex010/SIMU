@@ -339,3 +339,13 @@ h1 {
     transition: none !important;
   }
 }
+
+.recording { background-color: #dc3545 !important; }
+.disabled { opacity: 0.5; pointer-events: none; }
+.error { animation: pulse-error 1s infinite; }
+
+@keyframes pulse-error {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
