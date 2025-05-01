@@ -1,55 +1,43 @@
-const axios = require('axios');
+const { OPENAI_API_KEY } = process.env;
 
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Método no permitido' }),
-      headers: { 'Content-Type': 'application/json' }
-    };
-  }
-
   try {
-    const { text, voice = 'nova', model = 'tts-1' } = JSON.parse(event.body);
+    const { text, voice = 'alloy', model = 'tts-1' } = JSON.parse(event.body);
     
-    if (!text) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Texto es requerido' })
-      };
-    }
-
-    const response = await axios.post(
-      'https://api.openai.com/v1/audio/speech',
-      {
+    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
         model,
         input: text,
-        voice
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        responseType: 'arraybuffer'
-      }
-    );
+        voice,
+        response_format: "mp3"
+      })
+    });
 
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.statusText}`);
+    }
+
+    // Devolver el audio binario directamente
+    const audioBuffer = await response.arrayBuffer();
+    
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'audio/mpeg' },
-      body: Buffer.from(response.data).toString('base64'),
-      isBase64Encoded: true
+      body: Buffer.from(audioBuffer).toString("base64"),
+      isBase64Encoded: true,
+      headers: {
+        'Content-Type': 'audio/mpeg'
+      }
     };
 
   } catch (error) {
-    console.error('Error en openaiSpeech:', error);
     return {
-      statusCode: error.response?.status || 500,
-      body: JSON.stringify({ 
-        error: 'Error al generar audio',
-        details: error.message 
-      })
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message })
     };
   }
 };
