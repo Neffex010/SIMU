@@ -67,22 +67,13 @@ export class SpeechController {
       },
       body: JSON.stringify({
         text: text,
-        voice: "coral", // Opciones permitidas: alloy, echo, fable, onyx, nova, shimmer
-        model: "tts-1" // Modelo correcto para TTS
+        voice: "coral",
+        model: "tts-1"
       })
     });
 
-    const audioData = await response.json();
-    
-    // Convertir base64 a blob
-    const byteCharacters = atob(audioData.audio);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const audioBlob = new Blob([byteArray], {type: 'audio/mpeg'});
-
+    // Obtener directamente el blob de audio
+    const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     audio.play();
