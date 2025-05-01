@@ -67,8 +67,8 @@ export class SpeechController {
       },
       body: JSON.stringify({
         text: text,
-        voice: "coral",
-        model: "tts-1"
+        voice: "nova",
+        model: "tts-1-hd"
       })
     });
 
