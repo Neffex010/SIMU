@@ -56,14 +56,37 @@ export class SpeechController {
   }
 
   // Síntesis de voz
-  speak(text) {
+ async speak(text) {
     if (!this.synthEnabled) return;
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = this.lang;
-    utt.pitch = this.voiceSettings.pitch;
-    utt.rate = this.voiceSettings.rate;
-    utt.volume = this.voiceSettings.volume;
-    speechSynthesis.speak(utt);
+  
+    try {
+      // Llamar a la API de OpenAI Speech
+      const response = await fetch(APP_SETTINGS.openAISpeechEndpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${APP_SETTINGS.openAIKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini-tts",
+          input: text,
+          voice: "coral", // Opciones: alloy, echo, fable, onyx, nova, shimmer
+          response_format: "mp3"
+        })
+      });
+  
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+      
+    } catch (error) {
+      console.error('Error con síntesis de voz:', error);
+      // Fallback a síntesis de voz nativa
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = this.lang;
+      speechSynthesis.speak(utt);
+    }
   }
 
   // Ajuste dinámico de voz
