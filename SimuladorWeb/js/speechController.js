@@ -55,39 +55,45 @@ export class SpeechController {
     }
   }
 
-  // Síntesis de voz
  async speak(text) {
-    if (!this.synthEnabled) return;
-  
-    try {
-      // Llamar a la API de OpenAI Speech
-      const response = await fetch(APP_SETTINGS.openAISpeechEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${APP_SETTINGS.openAIKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini-tts",
-          input: text,
-          voice: "coral", // Opciones: alloy, echo, fable, onyx, nova, shimmer
-          response_format: "mp3"
-        })
-      });
-  
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      audio.play();
-      
-    } catch (error) {
-      console.error('Error con síntesis de voz:', error);
-      // Fallback a síntesis de voz nativa
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.lang = this.lang;
-      speechSynthesis.speak(utt);
+  if (!this.synthEnabled) return;
+
+  try {
+    const response = await fetch(APP_SETTINGS.openAISpeechEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: text,
+        voice: "coral", // Opciones permitidas: alloy, echo, fable, onyx, nova, shimmer
+        model: "tts-1" // Modelo correcto para TTS
+      })
+    });
+
+    const audioData = await response.json();
+    
+    // Convertir base64 a blob
+    const byteCharacters = atob(audioData.audio);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
+    const byteArray = new Uint8Array(byteNumbers);
+    const audioBlob = new Blob([byteArray], {type: 'audio/mpeg'});
+
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    audio.play();
+
+  } catch (error) {
+    console.error('Error con síntesis de voz:', error);
+    // Fallback a síntesis de voz nativa
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = this.lang;
+    speechSynthesis.speak(utt);
   }
+}
 
   // Ajuste dinámico de voz
   setVoiceSettings({ pitch, rate, volume }) {
