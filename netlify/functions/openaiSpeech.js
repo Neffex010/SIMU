@@ -1,14 +1,24 @@
 const axios = require('axios');
 
 exports.handler = async (event) => {
-  // Solo permitir POST
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Método no permitido' }),
+      headers: { 'Content-Type': 'application/json' }
+    };
   }
 
   try {
-    const { text, voice = 'alloy', model = 'tts-1' } = JSON.parse(event.body);
+    const { text, voice = 'nova', model = 'tts-1' } = JSON.parse(event.body);
     
+    if (!text) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Texto es requerido' })
+      };
+    }
+
     const response = await axios.post(
       'https://api.openai.com/v1/audio/speech',
       {
@@ -27,16 +37,19 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'audio/mpeg'
-      },
-      body: response.data.toString('base64'),
+      headers: { 'Content-Type': 'audio/mpeg' },
+      body: Buffer.from(response.data).toString('base64'),
       isBase64Encoded: true
     };
+
   } catch (error) {
+    console.error('Error en openaiSpeech:', error);
     return {
       statusCode: error.response?.status || 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        error: 'Error al generar audio',
+        details: error.message 
+      })
     };
   }
 };
