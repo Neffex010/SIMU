@@ -1,5 +1,4 @@
 // src/speechController.js
-import { APP_SETTINGS } from './config.js';
 export class SpeechController {
   constructor(btnVoice, btnMute, lang = "es-MX") {
     this.btnVoice = btnVoice;
