@@ -26,10 +26,10 @@ export default class InterviewSimulator {
 
     // Controllers
     this.timer = new Timer(
-      document.getElementById("timer"),
-      APP_SETTINGS.tiempoPregunta,
-      () => this._collectAnswer()
-    );
+    document.getElementById("timer"),
+    APP_SETTINGS.tiempoPregunta,
+    () => this._collectAnswer(true) // true indica tiempo agotado
+  );
     this.speech = new SpeechController(
       document.getElementById("btnVoz"),
       document.getElementById("btnMute"),
@@ -138,44 +138,125 @@ export default class InterviewSimulator {
     document.getElementById('progressBar').style.width = `${percent}%`;
   }
 
-  async _collectAnswer() {
-    if (!this.moduloActual) {
-      return this._showFeedback("❌ Acción no permitida: Entrevista no iniciada");
+  async _collectAnswer(isTimeout = false) {
+  if (!this.moduloActual) {
+    return this._showFeedback("❌ Acción no permitida: Entrevista no iniciada");
+  }
+
+  this.timer.stop();
+  const text = this.respuestaInput.value.trim();
+
+  // Manejar respuesta vacía o tiempo agotado
+  if (!text) {
+    const tipoError = isTimeout ? "tiempo agotado" : "respuesta vacía";
+    const feedback = {
+      fortalezas: [],
+      mejoras: [`${tipoError.charAt(0).toUpperCase() + tipoError.slice(1)}`],
+      tip: isTimeout 
+        ? "⏱️ Practica gestionar mejor tu tiempo de respuesta" 
+        : "💡 Asegúrate de responder cada pregunta, incluso con ideas básicas"
+    };
+
+    // Registrar respuesta no contestada
+    this.respuestasUsuario.push({
+      modulo: this.moduloActual,
+      pregunta: QUESTIONS[this.moduloActual][this.indice],
+      respuesta: "No contestada",
+      feedback: feedback
+    });
+
+    // Mostrar feedback específico
+    const mensaje = isTimeout 
+      ? "⏳ Tiempo agotado: Pasando a la siguiente pregunta..." 
+      : "⚠️ Respuesta vacía: Por favor escribe o graba tu respuesta";
+    
+    this._showFeedback(mensaje, feedback);
+    
+    // Preparar siguiente pregunta con tiempo diferenciado
+    this.indice++;
+    const delay = isTimeout ? 1500 : 3000; // Menos tiempo para timeout
+    setTimeout(() => this._showQuestion(), delay);
+    return;
+  }
+
+  // Procesar respuesta válida
+  try {
+    const fb = await this._fetchFeedback(text);
+    
+    // Validar estructura del feedback
+    const feedbackValido = this._validarEstructuraFeedback(fb);
+    
+    if (!feedbackValido) {
+      throw new Error("Estructura de feedback inválida");
     }
 
-    this.timer.stop();
-    const text = this.respuestaInput.value.trim();
-    if (!text) return this._showFeedback('⚠️ No se detectó una respuesta.');
+    this.respuestasUsuario.push({
+      modulo: this.moduloActual,
+      pregunta: QUESTIONS[this.moduloActual][this.indice],
+      respuesta: text,
+      feedback: fb
+    });
 
-    try {
-      const fb = await this._fetchFeedback(text);
-      this.respuestasUsuario.push({
-        modulo: this.moduloActual,
-        pregunta: QUESTIONS[this.moduloActual][this.indice],
-        respuesta: text,
-        feedback: fb
-      });
+    // Mostrar feedback detallado
+    this._mostrarFeedbackEstructurado(fb);
+    
+    // Avanzar después de 3 segundos
+    this.indice++;
+    setTimeout(() => this._showQuestion(), 3000);
 
-      // Mostrar feedback estructurado
-      this.feedbackElem.innerHTML = `
-        <div class="feedback-section">
-          <h4>🔍 Fortalezas</h4>
-          <ul>${fb.fortalezas.map(f => `<li>${f}</li>`).join('')}</ul>
-          <h4>⚙️ Oportunidades</h4>
-          <ul>${fb.mejoras.map(m => `<li>${m}</li>`).join('')}</ul>
-          <h4>💡 Tip</h4>
-          <p>${fb.tip}</p>
-        </div>
-      `;
-      this.feedbackElem.classList.remove('d-none');
-
-      this.indice++;
-      setTimeout(() => this._showQuestion(), 4000);
-    } catch (e) {
-      console.error(e);
-      this._showFeedback('❌ Error analizando la respuesta.');
+  } catch (error) {
+    console.error("Error en collectAnswer:", error);
+    
+    // Manejar errores de API
+    const mensajeError = error.message.includes("serverless")
+      ? "🔧 Error en el servidor de análisis"
+      : "❌ Error procesando la respuesta";
+    
+    this._showFeedback(`${mensajeError}: ${error.message}`);
+    
+    // Reintentar si fue timeout
+    if (isTimeout) {
+      setTimeout(() => this._showQuestion(), 2000);
     }
   }
+}
+
+// Métodos auxiliares nuevos
+_validarEstructuraFeedback(fb) {
+  return (
+    Array.isArray(fb.fortalezas) &&
+    Array.isArray(fb.mejoras) &&
+    typeof fb.tip === 'string'
+  );
+}
+
+_mostrarFeedbackEstructurado(fb) {
+  this.feedbackElem.innerHTML = `
+    <div class="feedback-container">
+      <div class="feedback-section ${fb.mejoras.length ? 'con-mejoras' : ''}">
+        ${fb.fortalezas.length ? `
+          <div class="fortalezas">
+            <h4><i class="fas fa-check-circle"></i> Fortalezas</h4>
+            <ul>${fb.fortalezas.map(f => `<li>${f}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+        
+        ${fb.mejoras.length ? `
+          <div class="mejoras">
+            <h4><i class="fas fa-exclamation-triangle"></i> Mejoras</h4>
+            <ul>${fb.mejoras.map(m => `<li>${m}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+        
+        <div class="tip">
+          <h4><i class="fas fa-lightbulb"></i> Consejo Práctico</h4>
+          <p>${fb.tip}</p>
+        </div>
+      </div>
+    </div>
+  `;
+  this.feedbackElem.classList.remove('d-none');
+}
 
   _showFeedback(msg) {
     this.feedbackElem.textContent = msg;
