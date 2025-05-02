@@ -26,10 +26,10 @@ export default class InterviewSimulator {
 
     // Controllers
     this.timer = new Timer(
-  document.getElementById("timer"),
-  APP_SETTINGS.tiempoPregunta,
-  () => this._collectAnswer(true) // <- Agregar parámetro true para tiempo agotado
-);
+      document.getElementById("timer"),
+      APP_SETTINGS.tiempoPregunta,
+      () => this._collectAnswer()
+    );
     this.speech = new SpeechController(
       document.getElementById("btnVoz"),
       document.getElementById("btnMute"),
@@ -138,77 +138,44 @@ export default class InterviewSimulator {
     document.getElementById('progressBar').style.width = `${percent}%`;
   }
 
- async _collectAnswer(porTiempo = false) {
-  if (!this.moduloActual) {
-    return this._showFeedback("❌ Acción no permitida: Entrevista no iniciada");
+  async _collectAnswer() {
+    if (!this.moduloActual) {
+      return this._showFeedback("❌ Acción no permitida: Entrevista no iniciada");
+    }
+
+    this.timer.stop();
+    const text = this.respuestaInput.value.trim();
+    if (!text) return this._showFeedback('⚠️ No se detectó una respuesta.');
+
+    try {
+      const fb = await this._fetchFeedback(text);
+      this.respuestasUsuario.push({
+        modulo: this.moduloActual,
+        pregunta: QUESTIONS[this.moduloActual][this.indice],
+        respuesta: text,
+        feedback: fb
+      });
+
+      // Mostrar feedback estructurado
+      this.feedbackElem.innerHTML = `
+        <div class="feedback-section">
+          <h4>🔍 Fortalezas</h4>
+          <ul>${fb.fortalezas.map(f => `<li>${f}</li>`).join('')}</ul>
+          <h4>⚙️ Oportunidades</h4>
+          <ul>${fb.mejoras.map(m => `<li>${m}</li>`).join('')}</ul>
+          <h4>💡 Tip</h4>
+          <p>${fb.tip}</p>
+        </div>
+      `;
+      this.feedbackElem.classList.remove('d-none');
+
+      this.indice++;
+      setTimeout(() => this._showQuestion(), 4000);
+    } catch (e) {
+      console.error(e);
+      this._showFeedback('❌ Error analizando la respuesta.');
+    }
   }
-
-  this.timer.stop();
-  const text = this.respuestaInput.value.trim();
-
-  // Manejar respuesta vacía (por tiempo o manual)
-  if (!text) {
-    const mensaje = porTiempo 
-      ? "⏳ Tiempo agotado: La pregunta se marcó como no contestada" 
-      : '⚠️ No se detectó una respuesta.';
-
-    this._showFeedback(mensaje);
-
-    // Registrar pregunta no contestada
-    this.respuestasUsuario.push({
-      modulo: this.moduloActual,
-      pregunta: QUESTIONS[this.moduloActual][this.indice],
-      respuesta: "No contestada",
-      feedback: {
-        fortalezas: [],
-        mejoras: ["No se proporcionó respuesta"],
-        tip: "Considera practicar más este tipo de preguntas"
-      }
-    });
-
-    this.indice++;
-    
-    // Transición más rápida si fue por tiempo
-    const delay = porTiempo ? 1000 : 4000;
-    setTimeout(() => this._showQuestion(), delay);
-    return;
-  }
-
-  // Procesar respuesta válida
-  try {
-    const fb = await this._fetchFeedback(text);
-    
-    // Guardar respuesta con feedback
-    this.respuestasUsuario.push({
-      modulo: this.moduloActual,
-      pregunta: QUESTIONS[this.moduloActual][this.indice],
-      respuesta: text,
-      feedback: fb
-    });
-
-    // Mostrar feedback estructurado
-    this.feedbackElem.innerHTML = `
-      <div class="feedback-section">
-        <h4>🔍 Fortalezas</h4>
-        <ul>${fb.fortalezas.map(f => `<li>${f}</li>`).join('')}</ul>
-        <h4>⚙️ Áreas de mejora</h4>
-        <ul>${fb.mejoras.map(m => `<li>${m}</li>`).join('')}</ul>
-        <h4>💡 Recomendación</h4>
-        <p>${fb.tip}</p>
-      </div>
-    `;
-    this.feedbackElem.classList.remove('d-none');
-
-    // Avanzar a siguiente pregunta
-    this.indice++;
-    setTimeout(() => this._showQuestion(), 4000);
-
-  } catch (error) {
-    console.error('Error al procesar respuesta:', error);
-    this._showFeedback('❌ Error analizando la respuesta. Intenta de nuevo.');
-    this.timer.start(); // Reiniciar timer para permitir nuevo intento
-  }
-}
 
   _showFeedback(msg) {
     this.feedbackElem.textContent = msg;
