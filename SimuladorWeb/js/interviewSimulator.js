@@ -14,7 +14,7 @@ export default class InterviewSimulator {
     this.moduloActual = null;
     this.indice = -1;
 
-    // Elementos DOM
+    // DOM Elements
     this.cardBienvenida = document.getElementById("bienvenidaCard");
     this.nombreElem = document.getElementById("nombreUsuario");
     this.controlElem = document.getElementById("controlUsuario");
@@ -24,11 +24,11 @@ export default class InterviewSimulator {
     this.moduleLabel = document.getElementById("moduloActual");
     this.btnReiniciar = document.getElementById("btnReiniciar");
 
-    // Controladores
+    // Controllers
     this.timer = new Timer(
       document.getElementById("timer"),
       APP_SETTINGS.tiempoPregunta,
-      () => this._collectAnswer(true) // Llamada con tiempo agotado
+      () => this._collectAnswer()
     );
     this.speech = new SpeechController(
       document.getElementById("btnVoz"),
@@ -36,7 +36,7 @@ export default class InterviewSimulator {
       'es-MX'
     );
 
-    // Vista previa y PDF
+    // Preview & PDF
     this.preview = new PreviewModal(
       document.getElementById("vistaPreviaContenido"),
       this.respuestasUsuario,
@@ -49,12 +49,7 @@ export default class InterviewSimulator {
       window.jspdf.jsPDF
     );
 
-    // Event listeners
-    this._initializeEventListeners();
-    this._setupInteractiveElements();
-  }
-
-  _initializeEventListeners() {
+    // Listeners
     document.getElementById("btnComenzar").addEventListener("click", () => this.startInterview());
     document.getElementById("btnSiguiente").addEventListener("click", () => this._collectAnswer());
     document.getElementById("btnVoz").addEventListener("click", () =>
@@ -63,22 +58,19 @@ export default class InterviewSimulator {
         else this._showFeedback("No se detectó voz.");
       })
     );
-    
     ["btnDescargarPDF", "descargarDesdeModal"].forEach(id => {
       document.getElementById(id).addEventListener("click", () => this.generatePDF());
     });
-    
     document.getElementById("btnVistaPrevia").addEventListener("click", () => this.preview.show());
     this.btnReiniciar.addEventListener("click", () => this.reiniciarEntrevista());
-  }
 
-  _setupInteractiveElements() {
     this.interactiveElements = {
       btnVoz: document.getElementById("btnVoz"),
       btnSiguiente: document.getElementById("btnSiguiente"),
       respuestaInput: document.getElementById("respuesta")
     };
 
+    // Prevent focus before start
     this.interactiveElements.respuestaInput.addEventListener('focus', () => {
       if (!this.moduloActual) {
         this._showFeedback("Primero inicia la entrevista");
@@ -92,8 +84,9 @@ export default class InterviewSimulator {
   startInterview() {
     this.moduloActual = 'tecnicas';
     this.indice = 0;
-    this.respuestasUsuario = [];
+    this.respuestasUsuario.length = 0;
 
+    // UI
     document.getElementById("inicioEntrevista").classList.add("d-none");
     this.cardBienvenida.classList.remove("d-none");
     this.nombreElem.textContent = `${this.datosAspirante.nombre} ${this.datosAspirante.apellidos}`;
@@ -126,25 +119,17 @@ export default class InterviewSimulator {
 
     const txt = list[this.indice];
     this.preguntaElem.textContent = txt;
-    this._animateQuestion();
-    
+    this.preguntaElem.classList.add("fade-in");
+    this.preguntaElem.addEventListener('animationend', () => {
+      this.preguntaElem.classList.remove("fade-in");
+    }, { once: true });
+
     this.respuestaInput.value = '';
     this._clearFeedback();
     this.timer.reset();
     this.timer.start();
     this.speech.speak(txt);
 
-    this._updateProgress();
-  }
-
-  _animateQuestion() {
-    this.preguntaElem.classList.add("fade-in");
-    this.preguntaElem.addEventListener('animationend', () => {
-      this.preguntaElem.classList.remove("fade-in");
-    }, { once: true });
-  }
-
-  _updateProgress() {
     const total = QUESTIONS.tecnicas.length + QUESTIONS.blandas.length;
     const currentIndex = this.moduloActual === 'tecnicas'
       ? this.indice + 1
@@ -153,77 +138,43 @@ export default class InterviewSimulator {
     document.getElementById('progressBar').style.width = `${percent}%`;
   }
 
-  async _collectAnswer(porTiempo = false) {
+  async _collectAnswer() {
     if (!this.moduloActual) {
       return this._showFeedback("❌ Acción no permitida: Entrevista no iniciada");
     }
 
     this.timer.stop();
     const text = this.respuestaInput.value.trim();
-
-    if (!text) {
-      this._handleEmptyAnswer(porTiempo);
-      return;
-    }
+    if (!text) return this._showFeedback('⚠️ No se detectó una respuesta.');
 
     try {
       const fb = await this._fetchFeedback(text);
-      this._processValidAnswer(text, fb);
-    } catch (error) {
-      this._handleAnswerError(error);
+      this.respuestasUsuario.push({
+        modulo: this.moduloActual,
+        pregunta: QUESTIONS[this.moduloActual][this.indice],
+        respuesta: text,
+        feedback: fb
+      });
+
+      // Mostrar feedback estructurado
+      this.feedbackElem.innerHTML = `
+        <div class="feedback-section">
+          <h4>🔍 Fortalezas</h4>
+          <ul>${fb.fortalezas.map(f => `<li>${f}</li>`).join('')}</ul>
+          <h4>⚙️ Oportunidades</h4>
+          <ul>${fb.mejoras.map(m => `<li>${m}</li>`).join('')}</ul>
+          <h4>💡 Tip</h4>
+          <p>${fb.tip}</p>
+        </div>
+      `;
+      this.feedbackElem.classList.remove('d-none');
+
+      this.indice++;
+      setTimeout(() => this._showQuestion(), 4000);
+    } catch (e) {
+      console.error(e);
+      this._showFeedback('❌ Error analizando la respuesta.');
     }
-  }
-
-  _handleEmptyAnswer(porTiempo) {
-    const mensaje = porTiempo 
-      ? "⏳ Tiempo agotado: La pregunta se marcó como no contestada" 
-      : '⚠️ No se detectó una respuesta.';
-    
-    this._showFeedback(mensaje);
-    
-    this.respuestasUsuario.push({
-      modulo: this.moduloActual,
-      pregunta: QUESTIONS[this.moduloActual][this.indice],
-      respuesta: "No contestada",
-      feedback: {
-        fortalezas: [],
-        mejoras: ["No se proporcionó respuesta"],
-        tip: "Prepárate mejor para este tipo de preguntas"
-      }
-    });
-
-    this.indice++;
-    setTimeout(() => this._showQuestion(), porTiempo ? 1000 : 4000);
-  }
-
-  _processValidAnswer(text, feedback) {
-    this.respuestasUsuario.push({
-      modulo: this.moduloActual,
-      pregunta: QUESTIONS[this.moduloActual][this.indice],
-      respuesta: text,
-      feedback: feedback
-    });
-
-    this.feedbackElem.innerHTML = `
-      <div class="feedback-section">
-        <h4>🔍 Fortalezas</h4>
-        <ul>${feedback.fortalezas.map(f => `<li>${f}</li>`).join('')}</ul>
-        <h4>⚙️ Oportunidades</h4>
-        <ul>${feedback.mejoras.map(m => `<li>${m}</li>`).join('')}</ul>
-        <h4>💡 Tip</h4>
-        <p>${feedback.tip}</p>
-      </div>
-    `;
-    this.feedbackElem.classList.remove('d-none');
-
-    this.indice++;
-    setTimeout(() => this._showQuestion(), 4000);
-  }
-
-  _handleAnswerError(error) {
-    console.error('Error al procesar respuesta:', error);
-    this._showFeedback('❌ Error analizando la respuesta. Intenta de nuevo.');
-    this.timer.start();
   }
 
   _showFeedback(msg) {
@@ -238,15 +189,20 @@ export default class InterviewSimulator {
   async _fetchFeedback(text) {
     const resp = await fetch(APP_SETTINGS.openAIEndpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text })  // se envía solo la respuesta del usuario
     });
     
-    if (!resp.ok) throw new Error(`Error en función serverless: ${resp.status}`);
+    if (!resp.ok) {
+      throw new Error(`Error en función serverless: ${resp.status}`);
+    }
     
-    const content = await resp.text();
+    const content = await resp.text();  // obtenemos el texto plano
+    
     try {
-      return JSON.parse(content);
+      return JSON.parse(content); // intentamos convertirlo en JSON
     } catch {
       console.warn('Error al convertir feedback a JSON:', content);
       return {
