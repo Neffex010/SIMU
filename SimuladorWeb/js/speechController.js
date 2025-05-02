@@ -1,6 +1,4 @@
 // src/speechController.js
-import { APP_SETTINGS } from './config.js';
-
 export class SpeechController {
   constructor(btnVoice, btnMute, lang = "es-MX") {
     this.btnVoice = btnVoice;
@@ -13,239 +11,163 @@ export class SpeechController {
     this.continuous = false;
     this.pauseDuration = 0;
     this.voiceSettings = { pitch: 1, rate: 1, volume: 1 };
-    this.audioElements = new Set();
-    this.activeUtterances = new Set();
-    this.currentAudio = null;
 
-    // Binding de métodos
-    this._handleVoiceClick = this._handleVoiceClick.bind(this);
-    this._handleRecognitionResult = this._handleRecognitionResult.bind(this);
-    this._handleRecognitionEnd = this._handleRecognitionEnd.bind(this);
-
+    // Configurar botones
     this._setupButtons();
-    this._checkSpeechSupport();
   }
 
+  // Inicializa eventos de UI
   _setupButtons() {
-    this.btnVoice.addEventListener("click", this._handleVoiceClick);
-    this.btnMute.addEventListener("click", () => this.toggleSynth());
+    this.btnVoice.addEventListener("click", () => this._handleVoiceClick());
+    this.btnMute.addEventListener("click", () => this._handleMuteClick());
     this._updateMuteUI();
-    this._updateVoiceButton();
   }
 
-  _checkSpeechSupport() {
-    if (!('speechSynthesis' in window)) {
-      this.btnMute.disabled = true;
-      console.warn('La síntesis de voz no está soportada');
+  _handleVoiceClick() {
+    // Cambia entre start/stop recognition
+    if (this.isRecording) this.stopRecognition();
+    else this.startRecognition(this._onEvent.bind(this));
+  }
+
+  _handleMuteClick() {
+    this.toggleSynth();
+    this._updateMuteUI();
+  }
+
+  // Callback interno que actualiza UI en base a eventos
+  _onEvent(event) {
+    switch(event.type) {
+      case 'start':
+        this.btnVoice.textContent = "🎙️ Grabando...";
+        this.btnVoice.classList.add("active");
+        break;
+      case 'end':
+        this.btnVoice.textContent = "🎤 Hablar";
+        this.btnVoice.classList.remove("active");
+        break;
+      case 'error':
+        alert(`Error de reconocimiento: ${event.error}`);
+        break;
+      case 'result':
+        // Aquí llamas al handler del usuario si existe
+        if (this.onResult) this.onResult(event.transcript);
+        break;
     }
   }
 
-  async speak(text) {
-    if (!this.synthEnabled || !text) return;
-
+  // Síntesis de voz
+ async speak(text) {
+    if (!this.synthEnabled) return;
+  
     try {
-      this._cleanupAudio();  // Limpiar reproducciones anteriores
-
+      // Llamar a la API de OpenAI Speech
       const response = await fetch(APP_SETTINGS.openAISpeechEndpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${APP_SETTINGS.openAIKey}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          text: text,
-          voice: "nova",
-          model: "tts-1-hd",
+          model: "gpt-4o-mini-tts",
+          input: text,
+          voice: "coral", // Opciones: alloy, echo, fable, onyx, nova, shimmer
           response_format: "mp3"
         })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Error ${response.status}: ${errorData.error}`);
-      }
-
+  
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-
-      audio.addEventListener('ended', () => this._handleAudioEnd(audioUrl, audio));
-      audio.addEventListener('error', (e) => this._handleAudioError(e, audioUrl, audio));
-
-      this.audioElements.add(audio);
-      this.currentAudio = audio;
-      await audio.play();
+      audio.play();
+      
     } catch (error) {
-      console.error('Error en síntesis de voz:', error);
-      this._fallbackTTS(text);
+      console.error('Error con síntesis de voz:', error);
+      // Fallback a síntesis de voz nativa
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = this.lang;
+      speechSynthesis.speak(utt);
     }
   }
 
-  _handleAudioEnd(audioUrl, audio) {
-    URL.revokeObjectURL(audioUrl);
-    this.audioElements.delete(audio);
-    this.currentAudio = null;
+  // Ajuste dinámico de voz
+  setVoiceSettings({ pitch, rate, volume }) {
+    if (pitch != null) this.voiceSettings.pitch = pitch;
+    if (rate  != null) this.voiceSettings.rate  = rate;
+    if (volume!= null) this.voiceSettings.volume = volume;
   }
 
-  _handleAudioError(error, audioUrl, audio) {
-    console.error('Error en reproducción:', error);
-    URL.revokeObjectURL(audioUrl);
-    this.audioElements.delete(audio);
-    this.currentAudio = null;
-  }
-
-  _fallbackTTS(text) {
-    if (!window.speechSynthesis) return;
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = this.lang;
-    Object.assign(utterance, this.voiceSettings);
-
-    utterance.addEventListener('end', () => {
-      this.activeUtterances.delete(utterance);
-    });
-
-    utterance.addEventListener('error', (e) => {
-      console.error('Error en TTS nativo:', e);
-      this.activeUtterances.delete(utterance);
-    });
-
-    this.activeUtterances.add(utterance);
-    speechSynthesis.speak(utterance);
-  }
-
-  startRecognition(onResult, options = {}) {
+  // Iniciar reconocimiento
+  startRecognition(onResult, { timeout = 10000, continuous = false, pauseBetween = 500 } = {}) {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) {
-      this._handleError('API de reconocimiento no soportada');
+      alert("Tu navegador no soporta reconocimiento de voz.");
       return;
     }
-
-    this._cleanupRecognition();
-    
-    const { timeout = 10000, continuous = false, pauseBetween = 500 } = options;
     this.onResult = onResult;
     this.continuous = continuous;
     this.pauseDuration = pauseBetween;
 
     this.recognition = new Recognition();
-    this._configureRecognition();
-
-    try {
-      this.recognition.start();
-      this.isRecording = true;
-      this._timeoutId = setTimeout(() => this.stopRecognition(), timeout);
-      this._updateVoiceButton();
-    } catch (error) {
-      this._handleError(error.message);
-    }
-  }
-
-  _configureRecognition() {
     this.recognition.lang = this.lang;
     this.recognition.interimResults = false;
     this.recognition.maxAlternatives = 1;
-    this.recognition.continuous = this.continuous;
+    this.recognition.continuous = continuous;
 
-    this.recognition.onstart = () => this._handleRecognitionStart();
-    this.recognition.onerror = (e) => this._handleRecognitionError(e);
-    this.recognition.onresult = (e) => this._handleRecognitionResult(e);
-    this.recognition.onend = () => this._handleRecognitionEnd();
-  }
-
-  _handleRecognitionStart() {
-    this.btnVoice.classList.add('recording');
-    this.btnVoice.textContent = 'Escuchando...';
-  }
-
-  _handleRecognitionResult(event) {
-    const result = event.results[event.resultIndex];
-    if (result.isFinal) {
-      const transcript = result[0]?.transcript?.trim();
-      if (transcript && this.onResult) {
-        this.onResult(transcript);
-      }
-    }
-  }
-
-  _handleRecognitionEnd() {
-    if (this.continuous && this.isRecording) {
-      setTimeout(() => this.recognition.start(), this.pauseDuration);
-    } else {
-      this.stopRecognition();
-    }
-  }
-
-  _handleRecognitionError(event) {
-    const errorMap = {
-      'no-speech': 'No se detectó voz',
-      'aborted': 'Reconocimiento detenido',
-      'audio-capture': 'Error de micrófono',
-      'network': 'Error de red',
-      'not-allowed': 'Permisos denegados'
+    this.recognition.onstart  = () => this._onEvent({ type: 'start' });
+    this.recognition.onend    = () => this._handleEnd(continuous, onResult, timeout);
+    this.recognition.onerror  = e => this._onEvent({ type: 'error', error: e.error });
+    this.recognition.onresult = ev => {
+      const text = ev.results[0]?.[0]?.transcript || '';
+      this._onEvent({ type: 'result', transcript: text });
     };
-    this._handleError(errorMap[event.error] || `Error: ${event.error}`);
+
+    this.recognition.start();
+    this.isRecording = true;
+    this._timeoutId = setTimeout(() => this.stopRecognition(), timeout);
+  }
+
+  // Manejo de fin de reconocimiento
+  _handleEnd(continuous, onResult, timeout) {
+    this.isRecording = false;
+    clearTimeout(this._timeoutId);
+    this._onEvent({ type: 'end' });
+    if (continuous) {
+      setTimeout(() => this.startRecognition(onResult, { timeout, continuous, pauseBetween: this.pauseDuration }), this.pauseDuration);
+    }
   }
 
   stopRecognition() {
     if (!this.recognition) return;
-    
     this.recognition.stop();
     this.isRecording = false;
     clearTimeout(this._timeoutId);
-    this._updateVoiceButton();
   }
 
   toggleSynth() {
     this.synthEnabled = !this.synthEnabled;
-    this._cleanupAudio();
-    this._updateMuteUI();
+    speechSynthesis.cancel();
     return this.synthEnabled;
   }
 
-  _cleanupAudio() {
-    // Detener y limpiar audios
-    this.audioElements.forEach(audio => {
-      audio.pause();
-      URL.revokeObjectURL(audio.src);
-    });
-    this.audioElements.clear();
-    
-    // Detener síntesis de voz
-    if (speechSynthesis.speaking) {
-      speechSynthesis.cancel();
-    }
-    this.activeUtterances.clear();
-  }
-
   _updateMuteUI() {
-    this.btnMute.textContent = this.synthEnabled ? "🔇 Silenciar" : "🔊 Activar";
-    this.btnMute.classList.toggle('muted', !this.synthEnabled);
+    this.btnMute.textContent = this.synthEnabled ? "🔇 Silenciar Voz" : "🔊 Activar Voz";
+    this.btnMute.classList.toggle("btn-danger", !this.synthEnabled);
+    this.btnMute.classList.toggle("btn-success", this.synthEnabled);
   }
 
-  _updateVoiceButton() {
-    this.btnVoice.textContent = this.isRecording ? "🎙️ Grabando..." : "🎤 Iniciar Voz";
-    this.btnVoice.classList.toggle('recording', this.isRecording);
-  }
-
-  _handleError(message) {
-    console.error(message);
-    this.btnVoice.textContent = "❌ Error";
-    this.btnVoice.classList.add('error');
-    setTimeout(() => this._updateVoiceButton(), 2000);
-  }
-
-  destroy() {
-    this._cleanupRecognition();
-    this._cleanupAudio();
-    this.btnVoice.removeEventListener('click', this._handleVoiceClick);
-    this.btnMute.removeEventListener('click', this.toggleSynth);
-  }
-
-  _cleanupRecognition() {
-    if (this.recognition) {
-      this.recognition.stop();
-      this.recognition = null;
-    }
-    clearTimeout(this._timeoutId);
+stopRecognition() {
+    if (!this.recognition) return;
+    this.recognition.stop();
     this.isRecording = false;
-    this._updateVoiceButton();
+    clearTimeout(this._timeoutId);
+    this._onEvent({ type: 'end' }); // Asegurar actualización UI
   }
+
+  setInterviewState(active) {
+    this.interviewActive = active;
+    if (!active) this.stopRecognition();
+  }
+
+  
 }
+
